@@ -1,0 +1,90 @@
+
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+      <meta name="mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-capable" content="yes" />
+      <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      <meta name="apple-mobile-web-app-title" content="Trineo Tasks" />
+      <meta name="theme-color" content="#1E40AF" />
+      <meta name="format-detection" content="telephone=no" />
+      <link rel="manifest" href="/manife
+      st.json" />
+      <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+      <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+      <link rel="apple-touch-icon" href="/icon-192.png" />
+      <title>Trineo Tasks Mobile App UI</title>
+      <style>
+        /* Only show desktop warning on large non-touch screens */
+        @media (min-width: 1025px) and (hover: hover) and (pointer: fine) {
+          body::before {
+            content: 'This app is mobile-only. Please use a mobile device or resize your browser to 360px width.';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            z-index: 9999;
+            padding: 20px;
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+      <div id="root"></div>
+      <script type="module" src="/src/main.tsx"></script>
+      <script>
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+              .then((registration) => {
+                console.log('✅ Service Worker registered: ', registration.scope);
+                
+                // Check for updates
+                registration.addEventListener('updatefound', () => {
+                  console.log('🔄 Service Worker update found');
+                });
+              })
+              .catch((registrationError) => {
+                console.error('❌ Service Worker registration failed: ', registrationError);
+              });
+          });
+        } else {
+          console.warn('⚠️ Service Workers not supported');
+        }
+
+        // Debug PWA installability
+        window.addEventListener('beforeinstallprompt', (e) => {
+          console.log('✅ beforeinstallprompt event fired - App is installable!');
+        });
+
+        // Check if app is installed
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          console.log('✅ App is running in standalone mode');
+        }
+
+        // Log manifest check
+        if ('serviceWorker' in navigator) {
+          fetch('/manifest.json')
+            .then(res => res.json())
+            .then(manifest => {
+              console.log('✅ Manifest loaded:', manifest);
+            })
+            .catch(err => {
+              console.error('❌ Manifest error:', err);
+            });
+        }
+      </script>
+    </body>
+  </html>
+  

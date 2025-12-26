@@ -74,7 +74,7 @@ export const authAPI = {
 
   login: async (email: string, password: string) => {
     // Use base URL directly because backend login endpoint is /login (no /api prefix)
-    const data = await request('/users/login', {
+    const data = await request('/auth/signin', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });

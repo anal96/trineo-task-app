@@ -19,17 +19,46 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS configuration - more secure for production
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
-  ? process.env.ALLOWED_ORIGINS.split(',')
-  : (NODE_ENV === 'production' ? [] : true); // Allow all in dev, restrict in prod
+// CORS configuration - restrict to Netlify frontend
+const netlifyOrigins = [
+  'https://trineoapp.netlify.app',
+  /^https:\/\/[a-zA-Z0-9-]+\.netlify\.app$/ // allow any Netlify subdomain
+];
 
-app.use(cors({
-  origin: allowedOrigins,
+// Merge with any additional origins from env (comma-separated)
+const extraOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [...netlifyOrigins, ...extraOrigins];
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl)
+    if (!origin) return callback(null, true);
+
+    const isAllowed = allowedOrigins.some((allowed) =>
+      typeof allowed === 'string' ? allowed === origin : allowed.test(origin)
+    );
+
+    if (isAllowed) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
+
+// Preflight handler
+app.options('*', cors(corsOptions));
+
+console.log('CORS configured for Netlify frontend');
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

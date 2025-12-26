@@ -29,7 +29,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
       endpoint.startsWith('http://') || endpoint.startsWith('https://');
     const url = isAbsolute ? endpoint : `${API_URL}${endpoint}`;
     console.log(`🌐 Making request to: ${url}`, options.method || 'GET');
-    
+
     const response = await fetch(url, {
       ...options,
       headers,
@@ -38,8 +38,8 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     console.log(`📡 Response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        error: `Server error: ${response.status} ${response.statusText}` 
+      const error = await response.json().catch(() => ({
+        error: `Server error: ${response.status} ${response.statusText}`
       }));
       console.error('❌ API Error:', error);
       throw new Error(error.error || `Request failed with status ${response.status}`);
@@ -50,7 +50,7 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     return data;
   } catch (error: any) {
     console.error('❌ Request failed:', error);
-    
+
     // Handle network errors
     if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
       throw new Error(
@@ -74,10 +74,11 @@ export const authAPI = {
 
   login: async (email: string, password: string) => {
     // Use base URL directly because backend login endpoint is /login (no /api prefix)
-    const data = await request(`${API_BASE}/login`, {
+    const data = await request('/users/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));

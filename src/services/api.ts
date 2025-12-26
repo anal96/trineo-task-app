@@ -1,7 +1,10 @@
 // API URL configuration
 // In production, use relative path (same domain)
 // In development, use Vite proxy or explicit URL
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL =
+  import.meta.env.VITE_API_URL?.replace(/\/$/, '') ||
+  (import.meta.env.DEV ? '/api' : 'https://trineo-task-app-ajcg.onrender.com');
+
 
 // Debug: Log API URL
 if (import.meta.env.DEV) {

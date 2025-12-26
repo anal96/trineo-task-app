@@ -1,19 +1,13 @@
 // API URL configuration
-// In production, use relative path (same domain)
-// In development, use Vite proxy or explicit URL
-const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, '') ||
-  (import.meta.env.DEV ? '/api' : 'https://trineo-task-app-ajcg.onrender.com');
-
+// In production, use deployed backend URL from env
+// In development, default to local backend
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = `${API_BASE}/api`;
 
 // Debug: Log API URL
 if (import.meta.env.DEV) {
-  console.log('🔗 API URL:', API_URL);
-  if (API_URL === '/api') {
-    console.log('📡 All API requests will be proxied through Vite dev server (port 5173)');
-  } else {
-    console.log('📡 API requests will go to:', API_URL);
-  }
+  console.log('🔗 API BASE:', API_BASE);
+  console.log('🔗 API URL (for /api routes):', API_URL);
 }
 
 // Get auth token from localStorage
@@ -31,7 +25,9 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
   };
 
   try {
-    const url = `${API_URL}${endpoint}`;
+    const isAbsolute =
+      endpoint.startsWith('http://') || endpoint.startsWith('https://');
+    const url = isAbsolute ? endpoint : `${API_URL}${endpoint}`;
     console.log(`🌐 Making request to: ${url}`, options.method || 'GET');
     
     const response = await fetch(url, {
@@ -77,7 +73,8 @@ export const authAPI = {
   },
 
   login: async (email: string, password: string) => {
-    const data = await request('/auth/login', {
+    // Use base URL directly because backend login endpoint is /login (no /api prefix)
+    const data = await request(`${API_BASE}/login`, {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });

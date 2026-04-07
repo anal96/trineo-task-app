@@ -1,7 +1,7 @@
 // API URL configuration
 // In production, use deployed backend URL from env
 // In development, default to local backend
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const API_URL = `${API_BASE}/api`;
 
 // Debug: Log API URL

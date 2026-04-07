@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
-import { financeAPI, projectsAPI } from "../../services/api";
+import { financeAPI, projectsAPI, API_BASE } from "../../services/api";
 
 interface FinanceScreenProps {
   onBack: () => void;
@@ -281,7 +281,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                     <div className="flex items-center gap-2">
                       {t.billUrl && (
                         <a 
-                          href={`http://localhost:5000${t.billUrl}`} 
+                          href={`${API_BASE}${t.billUrl}`} 
                           target="_blank" 
                           rel="noreferrer"
                           className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-[#334155] text-[#1E40AF] dark:text-[#60A5FA] hover:bg-blue-100 dark:hover:bg-[#475569] transition-colors shadow-sm"

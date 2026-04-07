@@ -66,20 +66,45 @@ export function TasksScreen({ onTaskClick, onBack }: TasksScreenProps) {
     };
   }, []);
 
-  const loadTasks = async () => {
+  const loadTasks = async (isManualRefresh = false) => {
     try {
-      setLoading(true);
+      // Check cache first to avoid loading spinner
+      if (!isManualRefresh) {
+        const cacheKey = selectedFilter === "all" ? "/tasksGET" : `/tasks?status=${selectedFilter}GET`;
+        const cached = localStorage.getItem('trineo_cache_' + cacheKey);
+        if (cached) {
+          const allTasksItems = JSON.parse(cached);
+          const formatted = allTasksItems.map((task: any) => ({
+            id: task._id,
+            title: task.title,
+            project: task.projectId?.name || 'No Project',
+            time: task.estimatedTime 
+              ? `${Math.floor(task.estimatedTime / 60)}h ${task.estimatedTime % 60}m` 
+              : '0h 0m',
+            progress: task.progress || 0,
+            status: task.status || 'todo',
+            priority: task.priority || 'medium',
+          }));
+          setAllTasks(formatted);
+          setTasks(formatted);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+      } else {
+        setLoading(true);
+      }
       
       // Fetch tasks based on filter
-      let allTasks;
+      let fetchedTasks;
       if (selectedFilter === "all") {
-        allTasks = await tasksAPI.getAll();
+        fetchedTasks = await tasksAPI.getAll();
       } else {
-        allTasks = await tasksAPI.getAll(selectedFilter);
+        fetchedTasks = await tasksAPI.getAll(selectedFilter);
       }
 
       // Format tasks for display
-      const formattedTasks = allTasks.map((task: any) => ({
+      const formattedTasks = fetchedTasks.map((task: any) => ({
         id: task._id,
         title: task.title,
         project: task.projectId?.name || 'No Project',
@@ -95,7 +120,7 @@ export function TasksScreen({ onTaskClick, onBack }: TasksScreenProps) {
       setTasks(formattedTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
-      setTasks([]);
+      // Don't clear tasks if we have cached ones
     } finally {
       setLoading(false);
     }

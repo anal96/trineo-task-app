@@ -3,6 +3,9 @@ node_modules/
 /.pnp
 .pnp.js
 
+# Backend node_modules (keep package-lock.json for Render)
+# server/node_modules/
+
 # Testing
 /coverage
 
@@ -64,4 +67,8 @@ Thumbs.db
 # Helper scripts (optional - remove if you want to keep them)
 # CREATE_ENV.ps1
 # PUSH_TO_GITHUB.ps1
+
+# Uploads
+uploads/
+server/uploads/
 

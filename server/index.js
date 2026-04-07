@@ -9,6 +9,7 @@ import projectRoutes from './routes/projects.js';
 import userRoutes from './routes/users.js';
 import authRoutes from './routes/auth.js';
 import teamRoutes from './routes/team.js';
+import financeRoutes from './routes/finance.js';
 
 dotenv.config();
 
@@ -25,13 +26,22 @@ const netlifyOrigins = [
   /^https:\/\/[a-zA-Z0-9-]+\.netlify\.app$/ // allow any Netlify subdomain
 ];
 
+// Local development origins
+const localOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
+  'http://localhost:5174', // extra common vite port
+];
+
 // Merge with any additional origins from env (comma-separated)
 const extraOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map(o => o.trim())
   .filter(Boolean);
 
-const allowedOrigins = [...netlifyOrigins, ...extraOrigins];
+const allowedOrigins = [...netlifyOrigins, ...localOrigins, ...extraOrigins];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -180,6 +190,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/team', teamRoutes);
+app.use('/api/finance', financeRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -190,6 +201,9 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Serve static uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from React app in production
 if (NODE_ENV === 'production') {

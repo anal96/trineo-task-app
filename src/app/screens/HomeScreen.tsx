@@ -100,14 +100,29 @@ export function HomeScreen({ onTaskClick, onViewTasks, onAddTask }: HomeScreenPr
     }
   };
 
-  const loadData = async () => {
+  const loadData = async (isManualRefresh = false) => {
     try {
-      setLoading(true);
-      
       // Load user data
       const currentUser = authAPI.getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
+      }
+
+      // If not a manual refresh, try to load from cache first to avoid loading spinner
+      if (!isManualRefresh) {
+        const cachedTasks = localStorage.getItem('trineo_cache_/tasksGET');
+        const cachedStats = localStorage.getItem('trineo_cache_/tasks/stats/summaryGET');
+        const cachedProjects = localStorage.getItem('trineo_cache_/projectsGET');
+        
+        if (cachedTasks && cachedStats && cachedProjects) {
+          // Temporarily disable loading spinner if we have cache
+          setLoading(false);
+          // (Data will be updated below once fresh fetch completes)
+        } else {
+          setLoading(true);
+        }
+      } else {
+        setLoading(true);
       }
 
       // Load in-progress tasks

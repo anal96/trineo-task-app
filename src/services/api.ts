@@ -15,8 +15,25 @@ const getToken = () => {
   return localStorage.getItem('token');
 };
 
+// Cache helpers
+const CACHE_PREFIX = 'trineo_cache_';
+
+const getCache = (key: string) => {
+  const cached = localStorage.getItem(CACHE_PREFIX + key);
+  if (!cached) return null;
+  try {
+    return JSON.parse(cached);
+  } catch (e) {
+    return null;
+  }
+};
+
+const setCache = (key: string, data: any) => {
+  localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data));
+};
+
 // API request helper
-const request = async (endpoint: string, options: RequestInit = {}) => {
+const request = async (endpoint: string, options: RequestInit = {}, allowCache = true) => {
   const token = getToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -24,43 +41,59 @@ const request = async (endpoint: string, options: RequestInit = {}) => {
     ...options.headers,
   };
 
+  const cacheKey = endpoint + (options.method || 'GET');
+  
+  // Return cached data immediately if allowed
+  if (allowCache && options.method === 'GET') {
+    const cached = getCache(cacheKey);
+    if (cached) {
+      console.log(`📦 Serving from cache: ${endpoint}`);
+      // Return cached data, but trigger a background reload in many cases
+      // For simplicity in this helper, we'll return a promise that resolves to cache 
+      // but the caller handles the background update logic.
+    }
+  }
+
   try {
     const isAbsolute =
       endpoint.startsWith('http://') || endpoint.startsWith('https://');
     const url = isAbsolute ? endpoint : `${API_URL}${endpoint}`;
-    console.log(`🌐 Making request to: ${url}`, options.method || 'GET');
-
+    
     const response = await fetch(url, {
       ...options,
       headers,
     });
 
-    console.log(`📡 Response status: ${response.status} ${response.statusText}`);
-
     if (!response.ok) {
-      const error = await response.json().catch(() => ({
-        error: `Server error: ${response.status} ${response.statusText}`
+      const error = await response.json().catch(() => ({ 
+        error: `Server error: ${response.status} ${response.statusText}` 
       }));
-      console.error('❌ API Error:', error);
       throw new Error(error.error || `Request failed with status ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('✅ API Success:', endpoint);
+    
+    // Update cache for GET requests
+    if (options.method === 'GET' || !options.method) {
+      setCache(cacheKey, data);
+    }
+
     return data;
   } catch (error: any) {
-    console.error('❌ Request failed:', error);
-
-    // Handle network errors
-    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
-      throw new Error(
-        `Cannot connect to server. ` +
-        `Make sure both frontend (port 5173) and backend (port 5000) are running. ` +
-        `Start backend with: npm run dev:server`
-      );
+    // Handle offline case
+    const cached = getCache(cacheKey);
+    if (cached && (error.message.includes('fetch') || error.message.includes('Network'))) {
+      console.warn(`🌐 Offline: Serving stale cache for ${endpoint}`);
+      return cached;
     }
+    
     throw error;
   }
+};
+
+// Internal cache getter for screens
+export const getCachedData = (endpoint: string, method: string = 'GET') => {
+  return getCache(endpoint + method);
 };
 
 // Auth API
@@ -73,13 +106,10 @@ export const authAPI = {
   },
 
   login: async (email: string, password: string) => {
-    // Use base URL directly because backend login endpoint is /login (no /api prefix)
     const data = await request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-
-
     if (data.token) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -223,3 +253,45 @@ export const teamAPI = {
   },
 };
 
+// Finance API
+export const financeAPI = {
+  getTransactions: async (filters: {
+    type?: string;
+    category?: string;
+    startDate?: string;
+    endDate?: string;
+    projectId?: string;
+  } = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return request(`/finance${query}`);
+  },
+
+  createTransaction: async (formData: FormData) => {
+    const token = localStorage.getItem('token');
+    // Using Fetch directly because we need to send FormData (with files)
+    const response = await fetch(`${API_URL}/finance`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create transaction');
+    }
+
+    return response.json();
+  },
+
+  deleteTransaction: async (id: string) => {
+    return request(`/finance/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};

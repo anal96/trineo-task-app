@@ -8,6 +8,7 @@ import { TaskDetailScreen } from "./screens/TaskDetailScreen";
 import { AddTaskScreen } from "./screens/AddTaskScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { TeamProgressScreen } from "./screens/TeamProgressScreen";
+import { FinanceScreen } from "./screens/FinanceScreen";
 import { BottomNav } from "./components/trineo/BottomNav";
 import { InstallPrompt } from "./components/trineo/InstallPrompt";
 import { authAPI } from "../services/api";
@@ -21,6 +22,7 @@ type Screen =
   | "task-detail"
   | "add"
   | "profile"
+  | "finance"
   | "team-progress";
 
 export default function App() {
@@ -56,6 +58,8 @@ export default function App() {
         setCurrentScreen("add");
       } else if (tab === "team-progress") {
         setCurrentScreen("team-progress");
+      } else if (tab === "finance") {
+        setCurrentScreen("finance");
       } else if (tab === "profile") {
         setCurrentScreen("profile");
       }
@@ -126,10 +130,11 @@ export default function App() {
     currentScreen === "tasks" ||
     currentScreen === "add" ||
     currentScreen === "team-progress" ||
+    currentScreen === "finance" ||
     currentScreen === "profile";
 
   // Tab order for swipe navigation
-  const tabOrder = ["home", "tasks", "add", "team-progress", "profile"];
+  const tabOrder = ["home", "tasks", "finance", "add", "team-progress", "profile"];
 
   // Handle swipe navigation
   const handleSwipe = () => {
@@ -321,6 +326,12 @@ export default function App() {
               />
             )}
 
+            {currentScreen === "finance" && (
+              <FinanceScreen
+                onBack={handleBackToHome}
+              />
+            )}
+
             {currentScreen === "profile" && (
               <ProfileScreen 
                 onLogout={handleLogout} 
@@ -382,6 +393,11 @@ export default function App() {
                   )}
                   {previewTab === "team-progress" && (
                     <TeamProgressScreen
+                      onBack={handleBackToHome}
+                    />
+                  )}
+                  {previewTab === "finance" && (
+                    <FinanceScreen
                       onBack={handleBackToHome}
                     />
                   )}

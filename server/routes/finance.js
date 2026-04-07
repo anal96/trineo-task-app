@@ -57,7 +57,7 @@ router.post('/', verifyToken, upload.single('bill'), async (req, res) => {
       type,
       category,
       date: date || Date.now(),
-      projectId: projectId || null,
+      projectId: (projectId && projectId !== 'null' && projectId !== 'undefined') ? projectId : null,
       createdBy: req.userId,
       billUrl: req.file ? `/uploads/bills/${req.file.filename}` : null
     });
@@ -78,7 +78,7 @@ router.get('/', verifyToken, async (req, res) => {
     
     if (type) query.type = type;
     if (category) query.category = category;
-    if (projectId) query.projectId = projectId;
+    if (projectId && projectId !== 'null' && projectId !== 'undefined') query.projectId = projectId;
     
     if (startDate || endDate) {
       query.date = {};

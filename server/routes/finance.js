@@ -5,6 +5,7 @@ import { verifyToken } from './auth.js';
 import Transaction from '../models/Transaction.js';
 
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,6 +17,12 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Correct relative path from server/routes/finance.js to server/uploads/bills/
     const uploadPath = path.join(__dirname, '../uploads/bills/');
+    
+    // Ensure directory exists
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+    
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {

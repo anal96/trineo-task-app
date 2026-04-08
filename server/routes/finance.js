@@ -22,7 +22,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Determine storage engine (Cloudinary or Local Disk)
+// Determine storage engine (Cloudinary or Memory as Fallback)
 let storage;
 
 if (process.env.CLOUDINARY_CLOUD_NAME) {
@@ -36,24 +36,8 @@ if (process.env.CLOUDINARY_CLOUD_NAME) {
     },
   });
 } else {
-  console.log('📁 Using local disk storage for bills (Warning: Files will be temporary on Render)');
-  storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      // Correct relative path from server/routes/finance.js to server/uploads/bills/
-      const uploadPath = path.join(__dirname, '../uploads/bills/');
-      
-      // Ensure directory exists
-      if (!fs.existsSync(uploadPath)) {
-        fs.mkdirSync(uploadPath, { recursive: true });
-      }
-      
-      cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-    }
-  });
+  console.log('📦 Using Memory storage (Base64 fallback) for bills - Permanent in MongoDB');
+  storage = multer.memoryStorage();
 }
 
 const upload = multer({ 
@@ -75,6 +59,22 @@ router.post('/', verifyToken, upload.single('bill'), async (req, res) => {
   try {
     const { title, description, amount, type, category, date, projectId } = req.body;
     
+    let billUrl = null;
+    
+    if (req.file) {
+      if (req.file.path) {
+        // Cloudinary path
+        billUrl = req.file.path;
+      } else if (req.file.buffer) {
+        // Memory buffer - convert to Base64 Data URL
+        const b64 = req.file.buffer.toString('base64');
+        billUrl = `data:${req.file.mimetype};base64,${b64}`;
+      } else {
+        // Local fallback (legacy)
+        billUrl = `/uploads/bills/${req.file.filename}`;
+      }
+    }
+
     const transaction = new Transaction({
       title,
       description,
@@ -84,7 +84,7 @@ router.post('/', verifyToken, upload.single('bill'), async (req, res) => {
       date: date || Date.now(),
       projectId: (projectId && projectId !== 'null' && projectId !== 'undefined') ? projectId : null,
       createdBy: req.userId,
-      billUrl: req.file ? (req.file.path || `/uploads/bills/${req.file.filename}`) : null
+      billUrl
     });
 
     await transaction.save();

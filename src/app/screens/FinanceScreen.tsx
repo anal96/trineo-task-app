@@ -338,7 +338,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-6 pb-20 space-y-4 overflow-y-auto flex-1 scrollbar-hide">
+            <form onSubmit={handleSubmit} className="px-6 pb-40 space-y-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-[#334155] p-1 rounded-2xl">
                 <button
                   type="button"
@@ -524,7 +524,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
             </div>
 
             {/* Modal Content - Scrollable */}
-            <div className="px-8 pb-32 text-center -mt-4 relative z-10 overflow-y-auto flex-1 scrollbar-hide">
+            <div className="px-8 pb-48 text-center -mt-4 relative z-10 overflow-y-auto flex-1">
               <h3 className="text-[#0F172A] dark:text-white text-2xl font-black leading-tight mb-2 uppercase tracking-wide">
                 {selectedTransaction.title}
               </h3>

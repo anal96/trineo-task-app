@@ -42,6 +42,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<any | null>(null);
 
   useEffect(() => {
     loadData();
@@ -240,11 +241,12 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               <div className="w-10 h-10 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : transactions.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {transactions.map((t) => (
                 <div 
                   key={t._id} 
-                  className="bg-white dark:bg-[#1E293B] p-5 rounded-[24px] border border-gray-100 dark:border-[#334155]/50 shadow-sm hover:shadow-md transition-all flex items-center gap-4"
+                  onClick={() => setSelectedTransaction(t)}
+                  className="bg-white dark:bg-[#1E293B] p-4 rounded-[28px] border border-gray-100 dark:border-[#334155]/50 shadow-sm active:scale-[0.98] transition-all flex items-center gap-4 cursor-pointer group"
                 >
                   {/* Left: Icon */}
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
@@ -257,45 +259,36 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
 
                   {/* Middle: Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-[#0F172A] dark:text-white font-bold text-sm leading-tight truncate">
+                    <h4 className="text-[#0F172A] dark:text-white font-bold text-[15px] leading-snug break-words">
                       {t.title}
                     </h4>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[#1E40AF] dark:text-[#60A5FA] text-[9px] font-extrabold uppercase bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-md">
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-md ${
+                        t.type === 'income' 
+                          ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400' 
+                          : 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                      }`}>
                         {t.category}
                       </span>
-                      <span className="text-[#94A3B8] text-[10px] flex items-center gap-1 font-medium">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(t.date).toLocaleDateString()}
+                      <span className="text-[#94A3B8] text-[10px] flex items-center gap-1 font-bold">
+                        <Calendar className="w-3 h-3 text-blue-400" />
+                        {new Date(t.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
                       </span>
+                      {t.description && (
+                         <span className="text-gray-400 text-[10px] font-medium truncate max-w-[80px]">
+                           {t.description}
+                         </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Right: Amount & Actions */}
-                  <div className="flex flex-col items-end gap-2 pr-1">
-                    <p className={`text-base font-black tracking-tight ${
+                  {/* Right: Amount */}
+                  <div className="flex flex-col items-end shrink-0 pl-1">
+                    <p className={`text-lg font-black tracking-tight ${
                       t.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                     }`}>
                       {t.type === 'income' ? '+' : '-'}₹{t.amount.toLocaleString()}
                     </p>
-                    <div className="flex items-center gap-2">
-                      {t.billUrl && (
-                        <a 
-                          href={`${API_BASE}${t.billUrl}`} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-[#334155] text-[#1E40AF] dark:text-[#60A5FA] hover:bg-blue-100 dark:hover:bg-[#475569] transition-colors shadow-sm"
-                        >
-                          <FileText className="w-4 h-4" />
-                        </a>
-                      )}
-                      <button 
-                        onClick={() => handleDelete(t._id)}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-[#334155] text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-[#475569] transition-colors shadow-sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -320,7 +313,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               <h3 className="text-xl font-black text-[#0F172A] dark:text-white">New Transaction</h3>
               <button 
                 onClick={() => setShowAddModal(false)}
-                className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#334155] flex items-center justify-center"
+                className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#334155] flex items-center justify-center hover:bg-gray-200 dark:hover:bg-[#475569] transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
@@ -426,6 +419,16 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               </div>
 
               <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Description (Optional)</label>
+                <textarea
+                  placeholder="Add more details..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full bg-gray-50 dark:bg-[#0F172A] border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-[#2563EB] dark:text-white resize-none h-20"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Bill / Receipt Attachment</label>
                 <div className="relative group">
                   <input
@@ -470,6 +473,106 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                 {isSubmitting ? 'SAVING...' : 'ADD TRANSACTION'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Transaction Detail Modal */}
+      {selectedTransaction && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#0F172A] w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-10 duration-300">
+            {/* Modal Header */}
+            <div className="relative h-40 flex items-center justify-center">
+              <div className={`absolute inset-0 opacity-20 ${
+                selectedTransaction.type === 'income' ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <div className={`absolute inset-0 bg-gradient-to-b from-transparent to-white dark:to-[#0F172A]`}></div>
+              
+              <button 
+                onClick={() => setSelectedTransaction(null)}
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 z-10"
+              >
+                <X className="w-5 h-5 text-gray-600 dark:text-white" />
+              </button>
+
+              <div className={`relative z-10 w-20 h-20 rounded-3xl flex items-center justify-center shadow-xl ${
+                selectedTransaction.type === 'income' 
+                  ? 'bg-green-100 text-green-600' 
+                  : 'bg-red-100 text-red-600'
+              }`}>
+                {selectedTransaction.type === 'income' ? <TrendingUp className="w-10 h-10" /> : <TrendingDown className="w-10 h-10" />}
+              </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="px-8 pb-10 text-center -mt-4 relative z-10">
+              <h3 className="text-[#0F172A] dark:text-white text-2xl font-black leading-tight mb-2 uppercase tracking-wide">
+                {selectedTransaction.title}
+              </h3>
+              <p className={`text-3xl font-black mb-8 tracking-tighter ${
+                selectedTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {selectedTransaction.type === 'income' ? '+' : '-'}₹{selectedTransaction.amount.toLocaleString()}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="bg-gray-50 dark:bg-[#1E293B] p-4 rounded-3xl border border-gray-100 dark:border-[#334155]/50">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[1.5px] mb-1">Category</p>
+                  <p className="text-sm font-bold text-[#1E40AF] dark:text-blue-400">{selectedTransaction.category}</p>
+                </div>
+                <div className="bg-gray-50 dark:bg-[#1E293B] p-4 rounded-3xl border border-gray-100 dark:border-[#334155]/50">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[1.5px] mb-1">Date</p>
+                  <p className="text-sm font-bold text-gray-700 dark:text-gray-200">
+                    {new Date(selectedTransaction.date).toLocaleDateString(undefined, { dateStyle: 'long' })}
+                  </p>
+                </div>
+              </div>
+
+              {selectedTransaction.description && (
+                <div className="bg-blue-50/50 dark:bg-blue-900/10 p-6 rounded-[32px] mb-8 text-left border border-blue-100/50 dark:border-blue-800/20">
+                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-[1.5px] mb-2">Description</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-medium">
+                    {selectedTransaction.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedTransaction.projectId && (
+                <div className="flex items-center gap-3 mb-8 px-2">
+                   <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                     <FileText className="w-4 h-4" />
+                   </div>
+                   <div className="text-left">
+                     <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Linked Project</p>
+                     <p className="text-xs font-bold text-gray-700 dark:text-gray-200">{selectedTransaction.projectId.name || 'Project'}</p>
+                   </div>
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                {selectedTransaction.billUrl && (
+                  <a 
+                    href={`${API_BASE}${selectedTransaction.billUrl}`} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="flex-1 bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-[#334155] text-gray-700 dark:text-white py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all"
+                  >
+                    <FileText className="w-4 h-4" />
+                    VIEW PROOF
+                  </a>
+                )}
+                <button 
+                  onClick={() => {
+                    handleDelete(selectedTransaction._id);
+                    setSelectedTransaction(null);
+                  }}
+                  className="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  DELETE
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

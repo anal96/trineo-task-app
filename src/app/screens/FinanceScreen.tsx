@@ -279,6 +279,12 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                            {t.description}
                          </span>
                       )}
+                      {t.billUrl && (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
+                          <FileText className="w-3 h-3" />
+                          <span className="text-[9px] font-black uppercase tracking-tighter">Receipt</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -207,6 +207,11 @@ app.get('/api/health', (req, res) => {
 // Serve static uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// 404 handler for missing uploads - prevent SPA fallback
+app.use('/uploads', (req, res) => {
+  res.status(404).json({ error: 'File not found on server. Note: Files uploaded to Render are temporary unless using a persistent disk.' });
+});
+
 // Serve static files from React app in production
 if (NODE_ENV === 'production') {
   const distPath = path.join(__dirname, '../dist');

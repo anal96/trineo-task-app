@@ -62,9 +62,17 @@
           console.warn('⚠️ Service Workers not supported');
         }
 
-        // Debug PWA installability
+        // Debug PWA installability and capture event globally
+        window.deferredInstallPrompt = null;
         window.addEventListener('beforeinstallprompt', (e) => {
-          console.log('✅ beforeinstallprompt event fired - App is installable!');
+          // Prevent Chrome 67 and earlier from automatically showing the prompt
+          e.preventDefault();
+          // Stash the event so it can be triggered later.
+          window.deferredInstallPrompt = e;
+          console.log('✅ beforeinstallprompt event fired and captured!');
+          
+          // Dispatch a custom event for React components to listen to
+          window.dispatchEvent(new CustomEvent('pwa-install-available'));
         });
 
         // Check if app is installed

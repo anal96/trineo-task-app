@@ -40,11 +40,21 @@ export function InstallPrompt() {
       return;
     }
 
+    // Check if event was already captured globally
+    if ((window as any).deferredInstallPrompt && !deferredPrompt) {
+      setDeferredPrompt((window as any).deferredInstallPrompt);
+      const dismissed = localStorage.getItem('installPromptDismissed');
+      if (!dismissed) {
+        setTimeout(() => setShowPrompt(true), 1000);
+      }
+    }
+
     // For Android/Chrome, listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setDeferredPrompt(promptEvent);
+      (window as any).deferredInstallPrompt = promptEvent;
       
       // Check if user has dismissed before
       const dismissed = localStorage.getItem('installPromptDismissed');
@@ -53,13 +63,25 @@ export function InstallPrompt() {
       }
     };
 
+    const handleCustomAvailable = () => {
+      if ((window as any).deferredInstallPrompt) {
+        setDeferredPrompt((window as any).deferredInstallPrompt);
+        const dismissed = localStorage.getItem('installPromptDismissed');
+        if (!dismissed) {
+          setShowPrompt(true);
+        }
+      }
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-install-available' as any, handleCustomAvailable);
 
     // Check if app was just installed
     window.addEventListener('appinstalled', () => {
       setIsInstalled(true);
       setShowPrompt(false);
       setDeferredPrompt(null);
+      (window as any).deferredInstallPrompt = null;
       localStorage.removeItem('installPromptDismissed');
     });
 
@@ -75,9 +97,10 @@ export function InstallPrompt() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-install-available' as any, handleCustomAvailable);
       clearTimeout(fallbackTimer);
     };
-  }, [deferredPrompt, isInstalled]);
+  }, [isInstalled]); // Only depend on isInstalled to avoid infinite loops
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;

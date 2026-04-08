@@ -326,8 +326,8 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
 
       {/* Add Transaction Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#1E293B] w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#1E293B] w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
             <div className="px-6 pt-6 flex items-center justify-between mb-4">
               <h3 className="text-xl font-black text-[#0F172A] dark:text-white">New Transaction</h3>
               <button 
@@ -338,7 +338,7 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+            <form onSubmit={handleSubmit} className="px-6 pb-20 space-y-4 overflow-y-auto flex-1 scrollbar-hide">
               <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-[#334155] p-1 rounded-2xl">
                 <button
                   type="button"
@@ -498,8 +498,8 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
 
       {/* Transaction Detail Modal */}
       {selectedTransaction && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-[#0F172A] w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-10 duration-300">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-[#0F172A] w-full max-w-lg rounded-t-[40px] sm:rounded-[40px] overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom-10 duration-300 max-h-[90vh] flex flex-col">
             {/* Modal Header */}
             <div className="relative h-40 flex items-center justify-center">
               <div className={`absolute inset-0 opacity-20 ${
@@ -523,8 +523,8 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
               </div>
             </div>
 
-            {/* Modal Content */}
-            <div className="px-8 pb-10 text-center -mt-4 relative z-10">
+            {/* Modal Content - Scrollable */}
+            <div className="px-8 pb-32 text-center -mt-4 relative z-10 overflow-y-auto flex-1 scrollbar-hide">
               <h3 className="text-[#0F172A] dark:text-white text-2xl font-black leading-tight mb-2 uppercase tracking-wide">
                 {selectedTransaction.title}
               </h3>

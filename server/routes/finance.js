@@ -10,26 +10,51 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+
 const router = express.Router();
 
-// Multer configuration for bill uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Correct relative path from server/routes/finance.js to server/uploads/bills/
-    const uploadPath = path.join(__dirname, '../uploads/bills/');
-    
-    // Ensure directory exists
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+// Determine storage engine (Cloudinary or Local Disk)
+let storage;
+
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  console.log('☁️ Using Cloudinary storage for bills');
+  storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'trineo-tasks-bills',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
+      resource_type: 'auto'
+    },
+  });
+} else {
+  console.log('📁 Using local disk storage for bills (Warning: Files will be temporary on Render)');
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      // Correct relative path from server/routes/finance.js to server/uploads/bills/
+      const uploadPath = path.join(__dirname, '../uploads/bills/');
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadPath)) {
+        fs.mkdirSync(uploadPath, { recursive: true });
+      }
+      
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  });
+}
 
 const upload = multer({ 
   storage: storage,
@@ -38,7 +63,7 @@ const upload = multer({
     const allowedTypes = /jpeg|jpg|png|pdf/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
-    if (extname && mimetype) {
+    if (extname || mimetype) {
       return cb(null, true);
     }
     cb(new Error('Only images (jpeg, jpg, png) and PDFs are allowed'));
@@ -59,7 +84,7 @@ router.post('/', verifyToken, upload.single('bill'), async (req, res) => {
       date: date || Date.now(),
       projectId: (projectId && projectId !== 'null' && projectId !== 'undefined') ? projectId : null,
       createdBy: req.userId,
-      billUrl: req.file ? `/uploads/bills/${req.file.filename}` : null
+      billUrl: req.file ? (req.file.path || `/uploads/bills/${req.file.filename}`) : null
     });
 
     await transaction.save();

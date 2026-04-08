@@ -249,12 +249,26 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                   className="bg-white dark:bg-[#1E293B] p-4 rounded-[28px] border border-gray-100 dark:border-[#334155]/50 shadow-sm active:scale-[0.98] transition-all flex items-center gap-4 cursor-pointer group"
                 >
                   {/* Left: Icon */}
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
-                    t.type === 'income' 
-                      ? 'bg-green-100/50 dark:bg-green-900/20 text-green-600 dark:text-green-400' 
-                      : 'bg-red-100/50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                  }`}>
-                    {t.type === 'income' ? <TrendingUp className="w-7 h-7" /> : <TrendingDown className="w-7 h-7" />}
+                  <div className="relative shrink-0">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+                      t.type === 'income' 
+                        ? 'bg-green-100/50 dark:bg-green-900/20 text-green-600 dark:text-green-400' 
+                        : 'bg-red-100/50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                    }`}>
+                      {t.type === 'income' ? <TrendingUp className="w-7 h-7" /> : <TrendingDown className="w-7 h-7" />}
+                    </div>
+                    {t.billUrl && (
+                      <div 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const url = t.billUrl.startsWith('http') ? t.billUrl : `${API_BASE}${t.billUrl}`;
+                          window.open(url, '_blank');
+                        }}
+                        className="absolute -top-2 -right-2 w-7 h-7 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-[#1E293B] animate-bounce-subtle cursor-pointer hover:scale-110 transition-transform"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </div>
+                    )}
                   </div>
 
                   {/* Middle: Info */}
@@ -280,10 +294,9 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                          </span>
                       )}
                       {t.billUrl && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400">
-                          <FileText className="w-3 h-3" />
-                          <span className="text-[9px] font-black uppercase tracking-tighter">Receipt</span>
-                        </div>
+                        <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/20">
+                          Proof Attached
+                        </span>
                       )}
                     </div>
                   </div>
@@ -555,27 +568,36 @@ export function FinanceScreen({ onBack }: FinanceScreenProps) {
                 </div>
               )}
 
-              <div className="flex gap-4">
-                {selectedTransaction.billUrl && (
-                  <a 
-                    href={`${API_BASE}${selectedTransaction.billUrl}`} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex-1 bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-[#334155] text-gray-700 dark:text-white py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 shadow-sm hover:shadow-md transition-all"
+              <div className="flex flex-col gap-4">
+                {selectedTransaction.billUrl ? (
+                  <button 
+                    onClick={() => {
+                      const url = selectedTransaction.billUrl.startsWith('http') 
+                        ? selectedTransaction.billUrl 
+                        : `${API_BASE}${selectedTransaction.billUrl}`;
+                      window.open(url, '_blank');
+                    }}
+                    className="w-full bg-indigo-600 dark:bg-indigo-500 text-white py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transform active:scale-[0.98] transition-all"
                   >
-                    <FileText className="w-4 h-4" />
-                    VIEW PROOF
-                  </a>
+                    <FileText className="w-5 h-5" />
+                    OPEN ATTACHED BILL
+                  </button>
+                ) : (
+                  <div className="w-full bg-gray-100 dark:bg-gray-800 text-gray-400 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-3 border border-dashed border-gray-300 dark:border-gray-700">
+                    <FileText className="w-5 h-5 opacity-40" />
+                    NO BILL ATTACHED
+                  </div>
                 )}
+                
                 <button 
                   onClick={() => {
                     handleDelete(selectedTransaction._id);
                     setSelectedTransaction(null);
                   }}
-                  className="flex-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
+                  className="w-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 py-4 rounded-2xl font-black text-xs flex items-center justify-center gap-2 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
-                  DELETE
+                  DELETE TRANSACTION
                 </button>
               </div>
             </div>

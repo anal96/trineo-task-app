@@ -20,9 +20,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS configuration - restrict to Netlify frontend
-const netlifyOrigins = [
+// CORS configuration - allow official domain and Netlify previews
+const productionOrigins = [
   'https://trineoapp.netlify.app',
+  'https://app.trineo.in',
+  'https://www.app.trineo.in',
   /^https:\/\/[a-zA-Z0-9-]+\.netlify\.app$/ // allow any Netlify subdomain
 ];
 
@@ -41,7 +43,7 @@ const extraOrigins = (process.env.ALLOWED_ORIGINS || '')
   .map(o => o.trim())
   .filter(Boolean);
 
-const allowedOrigins = [...netlifyOrigins, ...localOrigins, ...extraOrigins];
+const allowedOrigins = [...productionOrigins, ...localOrigins, ...extraOrigins];
 
 const corsOptions = {
   origin: (origin, callback) => {
